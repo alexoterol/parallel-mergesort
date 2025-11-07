@@ -6,7 +6,8 @@
 CC = gcc
 
 # Banderas de compilación
-CFLAGS = -Wall -Wextra -g -pthread -std=c99
+CFLAGS = -Wall -Wextra -g -pthread -std=c99 -D_POSIX_C_SOURCE=200112L
+
 
 # Librerías a enlazar
 LDLIBS = -lm -pthread

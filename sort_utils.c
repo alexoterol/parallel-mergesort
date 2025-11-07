@@ -1,13 +1,14 @@
 #include "sort_utils.h"
 #include <math.h>
 
+
 // Función auxiliar para la mezcla secuencial (Merge)
 void sequential_merge(int arr[], int start, int mid, int end) {
     int i, j, k;
     int n1 = mid - start + 1;
     int n2 = end - mid;
 
-    // Crear arreglos temporales
+    // Arreglos temporales
     int L[n1], R[n2];
 
     // Copiar datos a arreglos temporales L[] y R[]

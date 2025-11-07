@@ -33,17 +33,16 @@ int* read_input(int* N, int source_type, const char* filename) {
         }
     }
 
-    // --- Lógica de Parseo (Común para ambas fuentes) ---
-
-    // 1. Contar el número de elementos para asignar memoria
+    // --- Lógica de Parseo ---
+    // 1. Contar número de elementos para asignar memoria
     char temp_buffer[MAX_INPUT_SIZE];
     strcpy(temp_buffer, input_buffer);
     
-    // Usamos una copia del input_buffer para el strtok_r para evitar modificar el original
+    // Usamos copia del input_buffer para strtok_r y evitar modificar el original
     char *saveptr_count;
     char* token = strtok_r(temp_buffer, ",\n", &saveptr_count);
     while (token != NULL) {
-        // Asegurarse de que no contamos strings vacías (ej: 1,,2)
+        // Asegurarse no contar strings vacías (ej: 1,,2)
         if (strlen(token) > 0) {
             (*N)++;
         }
@@ -64,7 +63,7 @@ int* read_input(int* N, int source_type, const char* filename) {
 
     int i = 0;
     char* saveptr_store;
-    // Usamos el buffer original para el almacenamiento real
+    // Usamos buffer original para almacenamiento real
     token = strtok_r(input_buffer, ",\n", &saveptr_store);
     while (token != NULL && i < *N) {
         if (strlen(token) > 0) {
@@ -83,21 +82,25 @@ int* read_input(int* N, int source_type, const char* filename) {
 
 // Función para obtener el número de procesadores disponibles (estimación)
 int get_num_processors() {
-    // [CÓDIGO DE get_num_processors sigue siendo el mismo]
-    long num_cpus = 1;
-    #ifdef _WIN32
-        SYSTEM_INFO sysinfo;
-        GetSystemInfo(&sysinfo);
-        num_cpus = sysinfo.dwNumberOfProcessors;
-    #elif defined(_SC_NPROCESSORS_ONLN)
+    long num_cpus = 14; // Fallback inicial
+
+    // Intenta usar la función estándar POSIX (devuelve núcleos lógicos)
+    #if defined(_SC_NPROCESSORS_ONLN)
         num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-    #elif defined(_SC_NPROC_ONLN)
-        num_cpus = sysconf(_SC_NPROC_ONLN);
+        
+        // Si sysconf falla o devuelve 1, lo corregimos manualmente.
+        // En tu sistema, quieres usar los 14 núcleos físicos como base P.
+        if (num_cpus <= 1) {
+            // ASIGNACIÓN MANUAL: Forzamos el valor a 14 (cores per socket)
+            num_cpus = 14; 
+        }
     #endif
-    
+
+    // Si la llamada sigue siendo inválida (aunque la hemos forzado arriba), se usa 1
     if (num_cpus < 1) {
         num_cpus = 1;
     }
+
     return (int)num_cpus;
 }
 
@@ -129,7 +132,7 @@ int main(int argc, char *argv[]) {
 
     // Obtener el número de procesadores disponibles para establecer P
     int P = get_num_processors();
-    printf("-> Sistema detectó %d procesadores. ", P);
+    printf("-> Sistema detectó (o se forzó) P = %d núcleos físicos disponibles.\n", P);
     
     // Asegurarse de que P no sea mayor que N/2 para que haya al menos un par de elementos por hilo
     if (P > N / 2) {
